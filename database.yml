@@ -1,0 +1,13 @@
+development:
+  dialect: postgres
+  database: gophermart
+  user: marsel
+  password:
+  host: 127.0.0.1
+  pool: 5
+
+test:
+  url: {{envOr "DATABASE_URI" "postgres://postgres:postgres@127.0.0.1:5432/praktikum"}}
+
+production:
+  url: {{envOr "DATABASE_URI" "postgres://postgres:postgres@127.0.0.1:5432/praktikum"}}

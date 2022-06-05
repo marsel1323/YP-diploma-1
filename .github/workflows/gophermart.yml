@@ -7,6 +7,7 @@ on:
     branches:
       - main
       - master
+      - develop
 
 jobs:
 
@@ -48,6 +49,14 @@ jobs:
         run: |
           (cd cmd/gophermart && go build -o gophermart)
           (cd cmd/accrual && chmod +x accrual_linux_amd64)
+
+      - name: Install Soda for DB Migrations
+        run: |
+          go install github.com/gobuffalo/pop/v6/soda@latest
+
+      - name: DB Migrations
+        run: |
+          soda migrate
 
       - name: Test
         run: |
