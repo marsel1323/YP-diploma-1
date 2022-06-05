@@ -6,9 +6,9 @@ type StatusType string
 
 const (
 	New        StatusType = "NEW"
-	Processing            = "PROCESSING"
-	Invalid               = "INVALID"
-	Processed             = "PROCESSED"
+	Processing StatusType = "PROCESSING"
+	Invalid    StatusType = "INVALID"
+	Processed  StatusType = "PROCESSED"
 )
 
 type Order struct {

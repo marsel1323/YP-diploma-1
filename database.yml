@@ -7,7 +7,7 @@ development:
   pool: 5
 
 test:
-  url: {{envOr "DATABASE_URI" "postgres://postgres:postgres@127.0.0.1:5432/praktikum"}}
+  url: {{envOr "DATABASE_URI" "postgres://postgres:postgres@127.0.0.1:5432/praktikum?sslmode=disable"}}
 
 production:
-  url: {{envOr "DATABASE_URI" "postgres://postgres:postgres@127.0.0.1:5432/praktikum"}}
+  url: {{envOr "DATABASE_URI" "postgres://postgres:postgres@127.0.0.1:5432/praktikum?sslmode=disable"}}

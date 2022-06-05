@@ -11,9 +11,9 @@ import (
 	"net/http"
 )
 
-var UserAlreadyExists = errors.New("user already exists")
-var LoginAndPasswordRequired = errors.New("login and Password are required")
-var InvalidJson = errors.New("invalid json")
+var ErrUserAlreadyExists = errors.New("user already exists")
+var ErrLoginAndPasswordRequired = errors.New("login and Password are required")
+var ErrInvalidJSON = errors.New("invalid json")
 
 type Repository struct {
 	App *config.Application
@@ -32,21 +32,21 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 	var json models.User
 
 	if err := c.ShouldBindJSON(&json); err != nil {
-		log.Println(InvalidJson)
+		log.Println(ErrInvalidJSON)
 		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": InvalidJson})
+		c.JSON(http.StatusBadRequest, gin.H{"error": ErrInvalidJSON})
 		return
 	}
 
 	// Validate json
 	if &json.Login != nil || &json.Password != nil {
-		log.Println(LoginAndPasswordRequired)
-		c.JSON(http.StatusBadRequest, gin.H{"error": LoginAndPasswordRequired})
+		log.Println(ErrLoginAndPasswordRequired)
+		c.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginAndPasswordRequired})
 		return
 	}
 	// Insert user in DB
 	_, err := repo.DB.CreateUser(json)
-	if errors.Is(err, UserAlreadyExists) {
+	if errors.Is(err, ErrUserAlreadyExists) {
 		c.JSON(http.StatusConflict, gin.H{"error": "Login already used"})
 	}
 

@@ -65,7 +65,7 @@ func (p *PostgresStorage) CreateUser(user models.User) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user.Id, err = result.LastInsertId()
+	user.ID, err = result.LastInsertId()
 	if err != nil {
 		return nil, err
 	}

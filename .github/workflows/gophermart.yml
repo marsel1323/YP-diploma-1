@@ -56,7 +56,7 @@ jobs:
 
       - name: DB Migrations
         run: |
-          soda migrate
+          soda migrate -e test
 
       - name: Test
         run: |
