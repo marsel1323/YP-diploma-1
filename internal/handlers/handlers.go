@@ -39,7 +39,7 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 	}
 
 	// Validate json
-	if &json.Login != nil || &json.Password != nil {
+	if &json.Login == nil || &json.Password == nil {
 		log.Println(ErrLoginAndPasswordRequired)
 		c.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginAndPasswordRequired})
 		return
