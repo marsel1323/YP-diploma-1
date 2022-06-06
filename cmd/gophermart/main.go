@@ -7,9 +7,9 @@ import (
 	"github.com/marsel1323/YP-diploma-1/internal/config"
 	"github.com/marsel1323/YP-diploma-1/internal/handlers"
 	"github.com/marsel1323/YP-diploma-1/internal/middlewares"
-	"github.com/marsel1323/YP-diploma-1/internal/repository"
+	"github.com/marsel1323/YP-diploma-1/internal/repository/postgresRepository"
+	"github.com/marsel1323/YP-diploma-1/internal/utils"
 	"log"
-	"os"
 )
 
 func main() {
@@ -19,10 +19,10 @@ func main() {
 	keyFlag := flag.String("k", "", "Hashing key")
 	flag.Parse()
 
-	serverAddress := GetEnv("RUN_ADDRESS", *serverAddressFlag)
-	dbDsn := GetEnv("DATABASE_URI", *dbDsnFlag)
-	accrualSystemAddress := GetEnv("ACCRUAL_SYSTEM_ADDRESS", *accrualSystemAddressFlag)
-	key := GetEnv("KEY", *keyFlag)
+	serverAddress := utils.GetEnv("RUN_ADDRESS", *serverAddressFlag)
+	dbDsn := utils.GetEnv("DATABASE_URI", *dbDsnFlag)
+	accrualSystemAddress := utils.GetEnv("ACCRUAL_SYSTEM_ADDRESS", *accrualSystemAddressFlag)
+	key := utils.GetEnv("KEY", *keyFlag)
 
 	cfg := config.Config{
 		Address:        serverAddress,
@@ -31,7 +31,7 @@ func main() {
 		Secret:         key,
 	}
 
-	dbStorage, err := repository.NewPostgresStorage(cfg.DSN)
+	dbStorage, err := postgresRepository.NewPostgresStorage(cfg.DSN)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,18 +56,10 @@ func main() {
 	{
 		authorized.POST("/api/user/orders", repo.CreateOrder)
 		authorized.GET("/api/user/orders", repo.GetAllOrders)
-		authorized.GET("/api/user/balance", nil)
-		authorized.POST("/api/user/balance/withdraw", nil)
-		authorized.GET("/api/user/balance/withdrawals", nil)
+		authorized.GET("/api/user/balance", repo.GetBalance)
+		authorized.POST("/api/user/balance/withdraw", repo.WithdrawBalance)
+		authorized.GET("/api/user/balance/withdrawals", repo.GetWithdrawalList)
 	}
 
 	log.Fatal(router.Run(cfg.Address))
-}
-
-func GetEnv(key string, defaultValue string) string {
-	env, ok := os.LookupEnv(key)
-	if ok {
-		return env
-	}
-	return defaultValue
 }

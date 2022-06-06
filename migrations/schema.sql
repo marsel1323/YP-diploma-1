@@ -21,6 +21,66 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: balances; Type: TABLE; Schema: public; Owner: marsel
+--
+
+CREATE TABLE public.balances (
+    id integer NOT NULL,
+    current numeric(32,2) DEFAULT 0,
+    withdrawn numeric(32,2) DEFAULT 0,
+    user_id integer NOT NULL,
+    CONSTRAINT balances_current_check CHECK ((current >= (0)::numeric)),
+    CONSTRAINT balances_withdrawn_check CHECK ((withdrawn >= (0)::numeric))
+);
+
+
+ALTER TABLE public.balances OWNER TO marsel;
+
+--
+-- Name: balances_id_seq; Type: SEQUENCE; Schema: public; Owner: marsel
+--
+
+CREATE SEQUENCE public.balances_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.balances_id_seq OWNER TO marsel;
+
+--
+-- Name: balances_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: marsel
+--
+
+ALTER SEQUENCE public.balances_id_seq OWNED BY public.balances.id;
+
+
+--
+-- Name: balances_user_id_seq; Type: SEQUENCE; Schema: public; Owner: marsel
+--
+
+CREATE SEQUENCE public.balances_user_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.balances_user_id_seq OWNER TO marsel;
+
+--
+-- Name: balances_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: marsel
+--
+
+ALTER SEQUENCE public.balances_user_id_seq OWNED BY public.balances.user_id;
+
+
+--
 -- Name: orders; Type: TABLE; Schema: public; Owner: marsel
 --
 
@@ -28,7 +88,7 @@ CREATE TABLE public.orders (
     id integer NOT NULL,
     number character varying,
     status character varying NOT NULL,
-    accrual integer,
+    accrual numeric(32,2),
     uploaded_at timestamp with time zone NOT NULL,
     user_id integer NOT NULL
 );
@@ -127,6 +187,79 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: withdrawals; Type: TABLE; Schema: public; Owner: marsel
+--
+
+CREATE TABLE public.withdrawals (
+    id integer NOT NULL,
+    "order" character varying,
+    sum numeric(32,2) DEFAULT 0,
+    processed_at timestamp with time zone NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.withdrawals OWNER TO marsel;
+
+--
+-- Name: withdrawals_id_seq; Type: SEQUENCE; Schema: public; Owner: marsel
+--
+
+CREATE SEQUENCE public.withdrawals_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.withdrawals_id_seq OWNER TO marsel;
+
+--
+-- Name: withdrawals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: marsel
+--
+
+ALTER SEQUENCE public.withdrawals_id_seq OWNED BY public.withdrawals.id;
+
+
+--
+-- Name: withdrawals_user_id_seq; Type: SEQUENCE; Schema: public; Owner: marsel
+--
+
+CREATE SEQUENCE public.withdrawals_user_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.withdrawals_user_id_seq OWNER TO marsel;
+
+--
+-- Name: withdrawals_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: marsel
+--
+
+ALTER SEQUENCE public.withdrawals_user_id_seq OWNED BY public.withdrawals.user_id;
+
+
+--
+-- Name: balances id; Type: DEFAULT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.balances ALTER COLUMN id SET DEFAULT nextval('public.balances_id_seq'::regclass);
+
+
+--
+-- Name: balances user_id; Type: DEFAULT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.balances ALTER COLUMN user_id SET DEFAULT nextval('public.balances_user_id_seq'::regclass);
+
+
+--
 -- Name: orders id; Type: DEFAULT; Schema: public; Owner: marsel
 --
 
@@ -145,6 +278,36 @@ ALTER TABLE ONLY public.orders ALTER COLUMN user_id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: withdrawals id; Type: DEFAULT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.withdrawals ALTER COLUMN id SET DEFAULT nextval('public.withdrawals_id_seq'::regclass);
+
+
+--
+-- Name: withdrawals user_id; Type: DEFAULT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.withdrawals ALTER COLUMN user_id SET DEFAULT nextval('public.withdrawals_user_id_seq'::regclass);
+
+
+--
+-- Name: balances balances_pkey; Type: CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.balances
+    ADD CONSTRAINT balances_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: balances balances_user_id_key; Type: CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.balances
+    ADD CONSTRAINT balances_user_id_key UNIQUE (user_id);
 
 
 --
@@ -180,6 +343,14 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: withdrawals withdrawals_pkey; Type: CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.withdrawals
+    ADD CONSTRAINT withdrawals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migration_version_idx; Type: INDEX; Schema: public; Owner: marsel
 --
 
@@ -191,6 +362,14 @@ CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USIN
 --
 
 ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: balances fk_user; Type: FK CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.balances
     ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 

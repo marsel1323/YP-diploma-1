@@ -1,110 +1,17 @@
-package repository
+package postgresRepository
 
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	_ "github.com/jackc/pgx/stdlib"
 	"github.com/marsel1323/YP-diploma-1/internal/models"
-	"github.com/marsel1323/YP-diploma-1/internal/utils"
 	"log"
 	"time"
 )
 
-func Connect(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		//log.Fatalf("Unable to connect to database: %v", err)
-		return nil, fmt.Errorf("unable to connect to database: %v", err)
-	}
-
-	if err = db.Ping(); err != nil {
-		//log.Fatalf("Unable to ping database: %v", err)
-		return nil, fmt.Errorf("unable to ping database: %v", err)
-	}
-
-	return db, nil
-}
-
-type PostgresStorage struct {
-	DB *sql.DB
-}
-
-func NewPostgresStorage(dsn string) (DBRepo, error) {
-	log.Println("connecting to DB...")
-	db, err := Connect(dsn)
-	if err != nil {
-		log.Println("error while connecting to DB...")
-		return nil, err
-	}
-	log.Println("connected!!!")
-
-	postgresStorage := &PostgresStorage{DB: db}
-
-	return postgresStorage, nil
-}
-
-func (p *PostgresStorage) CreateUser(user models.User) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	passwordHash, err := utils.HashPassword(user.Password)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = p.DB.ExecContext(
-		ctx,
-		`
-  				INSERT INTO users(login, passwordhash) 
-				VALUES ($1, $2);
-			  `,
-		user.Login,
-		passwordHash,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	//userID, err := result.LastInsertId()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//user.ID = int(userID)
-
-	return &user, nil
-}
-
-func (p *PostgresStorage) GetUser(login string) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	row := p.DB.QueryRowContext(
-		ctx,
-		`SELECT id, login, passwordhash FROM users WHERE login = $1`,
-		login,
-	)
-	if err := row.Err(); err != nil {
-		return nil, err
-	}
-
-	var u models.User
-	err := row.Scan(
-		&u.ID,
-		&u.Login,
-		&u.Password,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &u, nil
-}
-
 func (p *PostgresStorage) CreateOrder(userID int, order *models.Order) (*models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
+	log.Println(userID, order)
 	_, err := p.DB.ExecContext(
 		ctx,
 		`INSERT INTO orders(number, status, accrual, uploaded_at, user_id)
