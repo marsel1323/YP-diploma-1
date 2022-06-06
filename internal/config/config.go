@@ -8,5 +8,6 @@ type Config struct {
 }
 
 type Application struct {
-	Config Config
+	Config   Config
+	Sessions map[string]string
 }

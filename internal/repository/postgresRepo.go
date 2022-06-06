@@ -53,7 +53,7 @@ func (p *PostgresStorage) CreateUser(user models.User) (*models.User, error) {
 		return nil, err
 	}
 
-	result, err := p.DB.ExecContext(
+	_, err = p.DB.ExecContext(
 		ctx,
 		`
   				INSERT INTO users(login, passwordhash) 
@@ -65,9 +65,122 @@ func (p *PostgresStorage) CreateUser(user models.User) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user.ID, err = result.LastInsertId()
+
+	//userID, err := result.LastInsertId()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//user.ID = int(userID)
+
+	return &user, nil
+}
+
+func (p *PostgresStorage) GetUser(login string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	row := p.DB.QueryRowContext(
+		ctx,
+		`SELECT id, login, passwordhash FROM users WHERE login = $1`,
+		login,
+	)
+	if err := row.Err(); err != nil {
+		return nil, err
+	}
+
+	var u models.User
+	err := row.Scan(
+		&u.ID,
+		&u.Login,
+		&u.Password,
+	)
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return &u, nil
+}
+
+func (p *PostgresStorage) CreateOrder(userID int, order *models.Order) (*models.Order, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err := p.DB.ExecContext(
+		ctx,
+		`INSERT INTO orders(number, status, accrual, uploaded_at, user_id)
+			   VALUES ($1, $2, $3, $4, $5);`,
+		order.Number,
+		order.Status,
+		order.Accrual,
+		time.Now(),
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	//orderID, err := result.LastInsertId()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//order.ID = int(orderID)
+
+	return order, nil
+}
+
+func (p *PostgresStorage) GetOrder(orderNumber string) (*models.Order, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	row := p.DB.QueryRowContext(
+		ctx,
+		`SELECT id, number, status, accrual, uploaded_at, user_id
+			   FROM orders 
+			   WHERE number = $1
+	   `,
+		orderNumber,
+	)
+	if err := row.Err(); err != nil {
+		return nil, err
+	}
+
+	var o models.Order
+	err := row.Scan(
+		&o.ID,
+		&o.Number,
+		&o.Status,
+		&o.Accrual,
+		&o.UploadedAt,
+		&o.UserID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &o, nil
+}
+
+func (p *PostgresStorage) UpdateOrder(order *models.Order) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Println(order)
+
+	_, err := p.DB.ExecContext(
+		ctx,
+		`UPDATE orders SET status = $1, accrual = $2 WHERE number = $3`,
+		order.Status,
+		order.Accrual,
+		order.Number,
+	)
+	if err != nil {
+		return err
+	}
+
+	//orderID, err := result.LastInsertId()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//order.ID = int(orderID)
+
+	return nil
 }

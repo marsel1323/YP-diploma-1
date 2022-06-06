@@ -21,6 +21,66 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: orders; Type: TABLE; Schema: public; Owner: marsel
+--
+
+CREATE TABLE public.orders (
+    id integer NOT NULL,
+    number character varying,
+    status character varying NOT NULL,
+    accrual integer,
+    uploaded_at timestamp with time zone NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.orders OWNER TO marsel;
+
+--
+-- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: marsel
+--
+
+CREATE SEQUENCE public.orders_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.orders_id_seq OWNER TO marsel;
+
+--
+-- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: marsel
+--
+
+ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
+
+
+--
+-- Name: orders_user_id_seq; Type: SEQUENCE; Schema: public; Owner: marsel
+--
+
+CREATE SEQUENCE public.orders_user_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.orders_user_id_seq OWNER TO marsel;
+
+--
+-- Name: orders_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: marsel
+--
+
+ALTER SEQUENCE public.orders_user_id_seq OWNED BY public.orders.user_id;
+
+
+--
 -- Name: schema_migration; Type: TABLE; Schema: public; Owner: marsel
 --
 
@@ -67,10 +127,40 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: orders id; Type: DEFAULT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.orders_id_seq'::regclass);
+
+
+--
+-- Name: orders user_id; Type: DEFAULT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.orders ALTER COLUMN user_id SET DEFAULT nextval('public.orders_user_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: marsel
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: orders orders_number_key; Type: CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_number_key UNIQUE (number);
+
+
+--
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
 
 
 --
@@ -94,6 +184,14 @@ ALTER TABLE ONLY public.users
 --
 
 CREATE UNIQUE INDEX schema_migration_version_idx ON public.schema_migration USING btree (version);
+
+
+--
+-- Name: orders fk_user; Type: FK CONSTRAINT; Schema: public; Owner: marsel
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --

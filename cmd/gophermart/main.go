@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/marsel1323/YP-diploma-1/internal/config"
 	"github.com/marsel1323/YP-diploma-1/internal/handlers"
+	"github.com/marsel1323/YP-diploma-1/internal/middlewares"
 	"github.com/marsel1323/YP-diploma-1/internal/repository"
 	"log"
 	"os"
@@ -14,7 +15,7 @@ import (
 func main() {
 	serverAddressFlag := flag.String("a", "127.0.0.1:8080", "Listen to address:port")
 	dbDsnFlag := flag.String("d", "", "Database URI")
-	accrualSystemAddressFlag := flag.String("router", "", "Accrual System Address")
+	accrualSystemAddressFlag := flag.String("r", "", "Accrual System Address")
 	keyFlag := flag.String("k", "", "Hashing key")
 	flag.Parse()
 
@@ -35,7 +36,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := &config.Application{Config: cfg}
+	app := &config.Application{
+		Config:   cfg,
+		Sessions: make(map[string]string),
+	}
 
 	repo := handlers.NewRepo(app, dbStorage)
 
@@ -46,11 +50,16 @@ func main() {
 	router.POST("/api/user/register", repo.RegisterUser)
 	router.POST("/api/user/login", repo.LoginUser)
 	// Middleware IsAuthed
-	router.POST("/api/user/orders", nil)
-	router.GET("/api/user/orders", nil)
-	router.GET("/api/user/balance", nil)
-	router.POST("/api/user/balance/withdraw", nil)
-	router.GET("/api/user/balance/withdrawals", nil)
+
+	authorized := router.Group("/")
+	authorized.Use(middlewares.AuthRequired(app.Sessions))
+	{
+		authorized.POST("/api/user/orders", repo.CreateOrder)
+		authorized.GET("/api/user/orders", repo.GetAllOrders)
+		authorized.GET("/api/user/balance", nil)
+		authorized.POST("/api/user/balance/withdraw", nil)
+		authorized.GET("/api/user/balance/withdrawals", nil)
+	}
 
 	log.Fatal(router.Run(cfg.Address))
 }
