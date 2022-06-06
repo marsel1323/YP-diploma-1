@@ -10,17 +10,7 @@ import (
 )
 
 func (repo *Repository) GetBalance(c *gin.Context) {
-	login, ok := c.Get("login")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, nil)
-		return
-	}
-	loginStr, ok := login.(string)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-	user, err := repo.DB.GetUser(loginStr)
+	user, err := repo.GetUser(c)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, nil)
@@ -38,17 +28,7 @@ func (repo *Repository) GetBalance(c *gin.Context) {
 }
 
 func (repo *Repository) WithdrawBalance(c *gin.Context) {
-	login, ok := c.Get("login")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, nil)
-		return
-	}
-	loginStr, ok := login.(string)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-	user, err := repo.DB.GetUser(loginStr)
+	user, err := repo.GetUser(c)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, nil)
@@ -101,17 +81,7 @@ func (repo *Repository) WithdrawBalance(c *gin.Context) {
 }
 
 func (repo *Repository) GetWithdrawalList(c *gin.Context) {
-	login, ok := c.Get("login")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, nil)
-		return
-	}
-	loginStr, ok := login.(string)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-	user, err := repo.DB.GetUser(loginStr)
+	user, err := repo.GetUser(c)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, nil)

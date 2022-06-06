@@ -22,6 +22,7 @@ func AuthRequired(tokens map[string]string) gin.HandlerFunc {
 		}
 
 		c.Set("login", login)
+
 		c.Next()
 	}
 }

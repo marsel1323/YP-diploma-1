@@ -26,7 +26,6 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 	}
 
 	err := repo.DB.CreateUser(userJSON)
-
 	if err != nil && strings.Contains(err.Error(), "duplicate key") {
 		log.Println(err)
 		c.JSON(http.StatusConflict, gin.H{"error": "Login already used"})
@@ -46,16 +45,13 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 
 	err = repo.DB.SetBalance(user.ID, 0)
 	if err != nil {
-		log.Println("Set balance")
 		log.Println("Err", err)
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
 
 	sessionToken := utils.Hash(user.Login, repo.App.Config.Secret)
-
 	repo.App.Sessions[sessionToken] = user.Login
-
 	c.SetCookie(
 		"Authorization",
 		sessionToken,
@@ -99,9 +95,7 @@ func (repo *Repository) LoginUser(c *gin.Context) {
 	}
 
 	sessionToken := utils.Hash(userJSON.Login, repo.App.Config.Secret)
-
 	repo.App.Sessions[sessionToken] = userJSON.Login
-
 	c.SetCookie(
 		"Authorization",
 		sessionToken,

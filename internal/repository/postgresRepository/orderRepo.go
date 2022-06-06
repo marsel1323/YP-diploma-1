@@ -3,14 +3,13 @@ package postgresrepository
 import (
 	"context"
 	"github.com/marsel1323/YP-diploma-1/internal/models"
-	"log"
 	"time"
 )
 
 func (p *PostgresStorage) CreateOrder(userID int, order *models.Order) (*models.Order, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	log.Println(userID, order)
+
 	_, err := p.DB.ExecContext(
 		ctx,
 		`INSERT INTO orders(number, status, accrual, uploaded_at, user_id)
@@ -62,8 +61,6 @@ func (p *PostgresStorage) GetOrder(orderNumber string) (*models.Order, error) {
 func (p *PostgresStorage) UpdateOrder(order *models.Order) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	log.Println(order)
 
 	_, err := p.DB.ExecContext(
 		ctx,
