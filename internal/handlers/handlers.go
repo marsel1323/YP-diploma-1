@@ -21,7 +21,6 @@ var ErrUserAlreadyExists = errors.New("user already exists")
 var ErrLoginAndPasswordRequired = errors.New("login and password are required")
 var ErrInvalidRequest = errors.New("invalid request")
 var ErrInvalidPassword = errors.New("invalid password")
-var ErrSqlNoRowsInResultSet = errors.New("sql: no rows in result set")
 
 type Repository struct {
 	App *config.Application
@@ -36,22 +35,22 @@ func NewRepo(appConfig *config.Application, db repository.DBRepo) *Repository {
 }
 
 func (repo *Repository) RegisterUser(c *gin.Context) {
-	var userJson models.User
+	var userJSON models.User
 
-	if err := c.ShouldBindJSON(&userJson); err != nil {
+	if err := c.ShouldBindJSON(&userJSON); err != nil {
 		log.Println(ErrInvalidRequest)
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": ErrInvalidRequest})
 		return
 	}
 
-	if userJson.Login == "" || userJson.Password == "" {
+	if userJSON.Login == "" || userJSON.Password == "" {
 		log.Println(ErrLoginAndPasswordRequired)
 		c.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginAndPasswordRequired})
 		return
 	}
 
-	user, err := repo.DB.GetUser(userJson.Login)
+	user, err := repo.DB.GetUser(userJSON.Login)
 
 	if !errors.Is(err, sql.ErrNoRows) {
 		log.Println("Err", err)
@@ -60,22 +59,22 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 	}
 
 	if user != nil {
-		if user.Login == userJson.Login {
+		if user.Login == userJSON.Login {
 			c.JSON(http.StatusConflict, gin.H{"error": "login already in use"})
 			return
 		}
 	}
 
-	_, err = repo.DB.CreateUser(userJson)
+	_, err = repo.DB.CreateUser(userJSON)
 	if errors.Is(err, ErrUserAlreadyExists) {
 		log.Println(err)
 		c.JSON(http.StatusConflict, gin.H{"error": "Login already used"})
 		return
 	}
 
-	sessionToken := utils.Hash(userJson.Login, repo.App.Config.Secret)
+	sessionToken := utils.Hash(userJSON.Login, repo.App.Config.Secret)
 
-	repo.App.Sessions[sessionToken] = userJson.Login
+	repo.App.Sessions[sessionToken] = userJSON.Login
 
 	c.SetCookie(
 		"Authorization",
@@ -90,38 +89,38 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 }
 
 func (repo *Repository) LoginUser(c *gin.Context) {
-	var userJson models.User
+	var userJSON models.User
 
-	if err := c.ShouldBindJSON(&userJson); err != nil {
+	if err := c.ShouldBindJSON(&userJSON); err != nil {
 		log.Println(ErrInvalidRequest)
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": ErrInvalidRequest})
 		return
 	}
 
-	if userJson.Login == "" || userJson.Password == "" {
+	if userJSON.Login == "" || userJSON.Password == "" {
 		log.Println(ErrLoginAndPasswordRequired)
 		c.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginAndPasswordRequired})
 		return
 	}
 
-	user, err := repo.DB.GetUser(userJson.Login)
+	user, err := repo.DB.GetUser(userJSON.Login)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	passwordIsValid := utils.ComparePassword(userJson.Password, user.Password)
+	passwordIsValid := utils.ComparePassword(userJSON.Password, user.Password)
 	if !passwordIsValid {
 		log.Println(ErrInvalidPassword)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": ErrInvalidPassword})
 		return
 	}
 
-	sessionToken := utils.Hash(userJson.Login, repo.App.Config.Secret)
+	sessionToken := utils.Hash(userJSON.Login, repo.App.Config.Secret)
 
-	repo.App.Sessions[sessionToken] = userJson.Login
+	repo.App.Sessions[sessionToken] = userJSON.Login
 
 	c.SetCookie(
 		"Authorization",
@@ -226,20 +225,20 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 				return
 			}
 
-			respJson := struct {
+			respJSON := struct {
 				Order   string            `json:"order"`
 				Status  models.StatusType `json:"status"`
 				Accrual int               `json:"accrual"`
 			}{}
 
-			err = json.Unmarshal(bodyBytes, &respJson)
+			err = json.Unmarshal(bodyBytes, &respJSON)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
-			order.Status = respJson.Status
-			order.Accrual = respJson.Accrual
+			order.Status = respJSON.Status
+			order.Accrual = respJSON.Accrual
 
 			err = repo.DB.UpdateOrder(order)
 			if err != nil {
@@ -262,5 +261,35 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 }
 
 func (repo *Repository) GetAllOrders(c *gin.Context) {
+	// 200 — успешная обработка запроса.
+	login, ok := c.Get("login")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, nil)
+		return
+	}
+	loginStr, ok := login.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+	user, err := repo.DB.GetUser(loginStr)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
 
+	orders, err := repo.DB.GetAllUserOrders(user.ID)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+	// 204 — нет данных для ответа.
+	if len(orders) == 0 {
+		log.Println("204 — нет данных для ответа.")
+		c.JSON(http.StatusNoContent, nil)
+		return
+	}
+	c.JSON(http.StatusOK, orders)
 }

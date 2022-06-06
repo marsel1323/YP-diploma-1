@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type StatusType string
 
 const (
@@ -14,9 +12,9 @@ const (
 
 type Order struct {
 	ID         int        `json:"id,omitempty"`
-	Number     string     `json:"number,order"`
+	Number     string     `json:"number"`
 	Status     StatusType `json:"status"`
 	Accrual    int        `json:"accrual,omitempty"`
-	UploadedAt time.Time  `json:"uploaded_at"`
+	UploadedAt string     `json:"uploaded_at"`
 	UserID     int        `json:"user_id,omitempty"`
 }
