@@ -63,7 +63,6 @@ func (p *PostgresStorage) CreateWithdrawal(withdrawal *models.Withdrawal) error 
 	if err != nil {
 		return err
 	}
-	//defer tx.Rollback()
 
 	_, err = p.DB.ExecContext(
 		ctx,
@@ -91,11 +90,6 @@ func (p *PostgresStorage) CreateWithdrawal(withdrawal *models.Withdrawal) error 
 		return err
 	}
 
-	//args := []interface{}{withdrawal.Sum, withdrawal.Order, withdrawal.UserID}
-	//if _, err := stmt.ExecContext(ctx, args...); err != nil {
-	//	return err
-	//}
-
 	return tx.Commit()
 }
 
@@ -115,6 +109,7 @@ func (p *PostgresStorage) GetAllUserWithdrawals(userID int) ([]*models.Withdrawa
 		err := rows.Close()
 		if err != nil {
 			log.Println(err)
+			return
 		}
 	}(rows)
 	if err != nil {

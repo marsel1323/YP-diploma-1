@@ -6,7 +6,6 @@ import (
 	"github.com/marsel1323/YP-diploma-1/internal/repository"
 )
 
-//var ErrUserAlreadyExists = errors.New("user already exists")
 var ErrLoginAndPasswordRequired = errors.New("login and password are required")
 var ErrInvalidRequest = errors.New("invalid request")
 var ErrInvalidPassword = errors.New("invalid password")

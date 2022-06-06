@@ -26,12 +26,6 @@ func (p *PostgresStorage) CreateOrder(userID int, order *models.Order) (*models.
 		return nil, err
 	}
 
-	//orderID, err := result.LastInsertId()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//order.ID = int(orderID)
-
 	return order, nil
 }
 
@@ -83,12 +77,6 @@ func (p *PostgresStorage) UpdateOrder(order *models.Order) error {
 		return err
 	}
 
-	//orderID, err := result.LastInsertId()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//order.ID = int(orderID)
-
 	return nil
 }
 
@@ -107,7 +95,8 @@ func (p *PostgresStorage) GetAllUserOrders(userID int) ([]*models.Order, error) 
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
 		if err != nil {
-
+			log.Println(err)
+			return
 		}
 	}(rows)
 	if err != nil {
@@ -124,21 +113,15 @@ func (p *PostgresStorage) GetAllUserOrders(userID int) ([]*models.Order, error) 
 		var order models.Order
 
 		err := rows.Scan(
-			//&order.ID,
 			&order.Number,
 			&order.Status,
 			&order.Accrual,
 			&order.UploadedAt,
-			//&order.UserID,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		//
-		//uploadedAt, err := time.Parse(time.RFC3339, order.UploadedAt)
-		//order.UploadedAt = uploadedAt.String()
-		//order.UploadedAt = order.UploadedAt.Format(time.RFC3339)
 		orders = append(orders, &order)
 	}
 

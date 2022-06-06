@@ -65,13 +65,6 @@ func (repo *Repository) WithdrawBalance(c *gin.Context) {
 
 	withdrawal.UserID = user.ID
 
-	// 422 — неверный номер заказа;
-	//_, err = repo.DB.GetOrder(withdrawal.Order)
-	//if err != nil {
-	//	log.Println(err)
-	//	c.JSON(http.StatusUnprocessableEntity, nil)
-	//	return
-	//}
 	orderNumber, err := strconv.Atoi(withdrawal.Order)
 	if err != nil {
 		log.Println(err)
@@ -90,7 +83,7 @@ func (repo *Repository) WithdrawBalance(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
-	// 402 — на счету недостаточно средств;
+
 	if balance.Current < withdrawal.Sum {
 		log.Println("на счету недостаточно средств")
 		c.JSON(http.StatusPaymentRequired, nil)
@@ -103,9 +96,8 @@ func (repo *Repository) WithdrawBalance(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}
-	// 200 — успешная обработка запроса;
-	c.JSON(http.StatusOK, nil)
 
+	c.JSON(http.StatusOK, nil)
 }
 
 func (repo *Repository) GetWithdrawalList(c *gin.Context) {

@@ -14,13 +14,13 @@ func AuthRequired(tokens map[string]string) gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, nil)
 			return
 		}
-		//log.Println("Authorization:", auth)
+
 		login, ok := tokens[auth]
 		if !ok {
 			c.JSON(http.StatusUnauthorized, nil)
 			return
 		}
-		//log.Println("login:", login)
+
 		c.Set("login", login)
 		c.Next()
 	}

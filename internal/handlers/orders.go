@@ -55,7 +55,7 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 		Status: models.New,
 		Number: strconv.Itoa(orderNumber),
 	}
-	log.Printf("%+v\n", order)
+
 	existedOrder, err := repo.DB.GetOrder(order.Number)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		order, err = repo.DB.CreateOrder(user.ID, order)
@@ -64,7 +64,6 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, nil)
 			return
 		}
-		log.Printf("%+v\n", order)
 	} else if err != nil {
 		log.Println("GetOrder", err)
 		c.JSON(http.StatusInternalServerError, nil)
@@ -72,13 +71,10 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 	}
 
 	if existedOrder != nil {
-		log.Printf("%+v\n", existedOrder)
 		if existedOrder.UserID != user.ID {
-			log.Println("номер заказа уже был загружен другим пользователем")
 			c.JSON(http.StatusConflict, nil)
 			return
 		}
-		log.Println("номер заказа уже был загружен этим пользователем")
 		c.JSON(http.StatusOK, nil)
 		return
 	}
@@ -104,7 +100,6 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 		log.Println("Accrual Response Status:", resp.StatusCode)
 		order.Status = models.Processing
 		err = repo.DB.UpdateOrder(order)
-		log.Printf("%+v\n", order)
 		if err != nil {
 			log.Println("UpdateOrder:", err)
 			return
@@ -128,7 +123,6 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 				log.Println("json.Unmarshal", err)
 				return
 			}
-			log.Printf("%+v\n", respJSON)
 
 			order.Status = respJSON.Status
 			order.Accrual = respJSON.Accrual
@@ -145,9 +139,11 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 				return
 			}
 		} else if resp.StatusCode == http.StatusTooManyRequests {
-
+			log.Println("[Accrual]: Too many requests")
+			return
 		} else if resp.StatusCode == http.StatusInternalServerError {
-
+			log.Println("[Accrual]: Internal server error")
+			return
 		}
 	}()
 
@@ -180,7 +176,6 @@ func (repo *Repository) GetAllOrders(c *gin.Context) {
 	}
 
 	if len(orders) == 0 {
-		log.Println("204 — нет данных для ответа.")
 		c.SetCookie(
 			"Content-Length",
 			"0",

@@ -19,7 +19,6 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// Validate Login and Password
 	if userJSON.Login == "" || userJSON.Password == "" {
 		log.Println(ErrLoginAndPasswordRequired)
 		c.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginAndPasswordRequired})
@@ -45,7 +44,6 @@ func (repo *Repository) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	//Create balance
 	err = repo.DB.SetBalance(user.ID, 0)
 	if err != nil {
 		log.Println("Set balance")
