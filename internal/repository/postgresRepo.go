@@ -197,7 +197,12 @@ func (p *PostgresStorage) GetAllUserOrders(userID int) ([]*models.Order, error) 
 			   ORDER BY uploaded_at;`,
 		userID,
 	)
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+
+		}
+	}(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -224,8 +229,8 @@ func (p *PostgresStorage) GetAllUserOrders(userID int) ([]*models.Order, error) 
 		}
 
 		//
-		uploadedAt, err := time.Parse(time.RFC3339, order.UploadedAt)
-		order.UploadedAt = uploadedAt.String()
+		//uploadedAt, err := time.Parse(time.RFC3339, order.UploadedAt)
+		//order.UploadedAt = uploadedAt.String()
 		//order.UploadedAt = order.UploadedAt.Format(time.RFC3339)
 		orders = append(orders, &order)
 	}
