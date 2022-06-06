@@ -7,7 +7,7 @@ import (
 	"github.com/marsel1323/YP-diploma-1/internal/config"
 	"github.com/marsel1323/YP-diploma-1/internal/handlers"
 	"github.com/marsel1323/YP-diploma-1/internal/middlewares"
-	"github.com/marsel1323/YP-diploma-1/internal/repository/postgresRepository"
+	postgresRepository "github.com/marsel1323/YP-diploma-1/internal/repository/postgresRepository"
 	"github.com/marsel1323/YP-diploma-1/internal/utils"
 	"log"
 )
@@ -49,7 +49,6 @@ func main() {
 	router.Use(gzip.Gzip(gzip.DefaultCompression))
 	router.POST("/api/user/register", repo.RegisterUser)
 	router.POST("/api/user/login", repo.LoginUser)
-	// Middleware IsAuthed
 
 	authorized := router.Group("/")
 	authorized.Use(middlewares.AuthRequired(app.Sessions))

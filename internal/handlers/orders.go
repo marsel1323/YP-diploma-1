@@ -15,8 +15,21 @@ import (
 )
 
 func (repo *Repository) CreateOrder(c *gin.Context) {
-	order := &models.Order{
-		Status: models.New,
+	login, ok := c.Get("login")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, nil)
+		return
+	}
+	loginStr, ok := login.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+	user, err := repo.DB.GetUser(loginStr)
+	if err != nil {
+		log.Println("GetUser", err)
+		c.JSON(http.StatusInternalServerError, nil)
+		return
 	}
 
 	data, err := c.GetRawData()
@@ -38,25 +51,11 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	order.Number = strconv.Itoa(orderNumber)
-
-	login, ok := c.Get("login")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, nil)
-		return
+	order := &models.Order{
+		Status: models.New,
+		Number: strconv.Itoa(orderNumber),
 	}
-	loginStr, ok := login.(string)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-	user, err := repo.DB.GetUser(loginStr)
-	if err != nil {
-		log.Println("GetUser", err)
-		c.JSON(http.StatusInternalServerError, nil)
-		return
-	}
-
+	log.Printf("%+v\n", order)
 	existedOrder, err := repo.DB.GetOrder(order.Number)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		order, err = repo.DB.CreateOrder(user.ID, order)
@@ -65,6 +64,7 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, nil)
 			return
 		}
+		log.Printf("%+v\n", order)
 	} else if err != nil {
 		log.Println("GetOrder", err)
 		c.JSON(http.StatusInternalServerError, nil)
@@ -72,6 +72,7 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 	}
 
 	if existedOrder != nil {
+		log.Printf("%+v\n", existedOrder)
 		if existedOrder.UserID != user.ID {
 			log.Println("номер заказа уже был загружен другим пользователем")
 			c.JSON(http.StatusConflict, nil)
@@ -103,6 +104,7 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 		log.Println("Accrual Response Status:", resp.StatusCode)
 		order.Status = models.Processing
 		err = repo.DB.UpdateOrder(order)
+		log.Printf("%+v\n", order)
 		if err != nil {
 			log.Println("UpdateOrder:", err)
 			return
@@ -126,6 +128,7 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 				log.Println("json.Unmarshal", err)
 				return
 			}
+			log.Printf("%+v\n", respJSON)
 
 			order.Status = respJSON.Status
 			order.Accrual = respJSON.Accrual
@@ -146,13 +149,8 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 		} else if resp.StatusCode == http.StatusInternalServerError {
 
 		}
-
-		//err = resp.Body.Close()
-		//if err != nil {
-		//	log.Println(err)
-		//}
 	}()
-	// 202 — новый номер заказа принят в обработку
+
 	c.JSON(http.StatusAccepted, nil)
 }
 
@@ -183,6 +181,15 @@ func (repo *Repository) GetAllOrders(c *gin.Context) {
 
 	if len(orders) == 0 {
 		log.Println("204 — нет данных для ответа.")
+		c.SetCookie(
+			"Content-Length",
+			"0",
+			0,
+			"/",
+			"localhost",
+			false,
+			true,
+		)
 		c.JSON(http.StatusNoContent, nil)
 		return
 	}
