@@ -3,8 +3,10 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/marsel1323/YP-diploma-1/internal/models"
+	"github.com/theplant/luhn"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func (repo *Repository) GetBalance(c *gin.Context) {
@@ -64,9 +66,20 @@ func (repo *Repository) WithdrawBalance(c *gin.Context) {
 	withdrawal.UserID = user.ID
 
 	// 422 — неверный номер заказа;
-	_, err = repo.DB.GetOrder(withdrawal.Order)
+	//_, err = repo.DB.GetOrder(withdrawal.Order)
+	//if err != nil {
+	//	log.Println(err)
+	//	c.JSON(http.StatusUnprocessableEntity, nil)
+	//	return
+	//}
+	orderNumber, err := strconv.Atoi(withdrawal.Order)
 	if err != nil {
 		log.Println(err)
+		c.JSON(http.StatusInternalServerError, nil)
+		return
+	}
+	isValid := luhn.Valid(orderNumber)
+	if !isValid {
 		c.JSON(http.StatusUnprocessableEntity, nil)
 		return
 	}
