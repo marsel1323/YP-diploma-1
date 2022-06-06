@@ -2,9 +2,7 @@ package postgresrepository
 
 import (
 	"context"
-	"database/sql"
 	"github.com/marsel1323/YP-diploma-1/internal/models"
-	"log"
 	"time"
 )
 
@@ -105,16 +103,10 @@ func (p *PostgresStorage) GetAllUserWithdrawals(userID int) ([]*models.Withdrawa
 			   ORDER BY processed_at;`,
 		userID,
 	)
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}(rows)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	err = rows.Err()
 	if err != nil {

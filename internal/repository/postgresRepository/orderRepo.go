@@ -2,7 +2,6 @@ package postgresrepository
 
 import (
 	"context"
-	"database/sql"
 	"github.com/marsel1323/YP-diploma-1/internal/models"
 	"log"
 	"time"
@@ -92,16 +91,10 @@ func (p *PostgresStorage) GetAllUserOrders(userID int) ([]*models.Order, error) 
 			   ORDER BY uploaded_at;`,
 		userID,
 	)
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}(rows)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	err = rows.Err()
 	if err != nil {

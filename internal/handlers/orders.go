@@ -91,12 +91,8 @@ func (repo *Repository) CreateOrder(c *gin.Context) {
 			log.Println("unable to get order", err)
 			return
 		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.Println("Body.Close()", err)
-			}
-		}(resp.Body)
+		defer resp.Body.Close()
+
 		log.Println("Accrual Response Status:", resp.StatusCode)
 		order.Status = models.Processing
 		err = repo.DB.UpdateOrder(order)
